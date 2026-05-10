@@ -1,0 +1,273 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Movilnet - Panel de Control</title>
+    <link rel="stylesheet" href="{% static 'ventas/css/estructura.css' %}">
+    <style>
+        :root {
+            --movilnet-orange: #ff6600;
+            --movilnet-gray: #333;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
+
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .welcome-header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-text h1 {
+            margin: 0;
+            color: var(--movilnet-gray);
+        }
+
+        .welcome-text span {
+            color: var(--movilnet-orange);
+            font-weight: bold;
+        }
+
+        .grid-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--movilnet-orange);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--movilnet-gray);
+            margin: 10px 0;
+        }
+
+        .card .detail {
+            font-size: 0.85rem;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-action {
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--movilnet-orange);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--movilnet-gray);
+            border: 1px solid #ddd;
+        }
+
+        .btn-logout {
+            color: #d9534f;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer-home {
+            text-align: center;
+            margin-top: 50px;
+            color: #999;
+            font-size: 0.8rem;
+        }
+        .proyectos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .class-actions {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .proyectos-listado {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .proyecto-card-mini {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            border-left: 4px solid #ff6600;
+        }
+
+        .proyecto-card-mini h4 {
+            margin: 0;
+            color: #333;
+        }
+
+        .acciones-proyecto {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-editar {
+            background-color: #0f8a1f;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: fit-content;
+            align-self: center;
+        }
+
+        .btn-cancelar {
+            background-color: #ff4d4d;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 0 !important;    
+            outline: none !important;  
+            box-shadow: none !important; 
+}
+        .btn-editar:hover, .btn-cancelar:hover {
+        opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <!-- Encabezado de Bienvenida -->
+        <header class="welcome-header">
+            <div class="welcome-text">
+                <h1>Bienvenido, <span>{{ user.first_name }}</span></h1>
+                <p>Sistema de Seguimiento de Proyectos.</p>
+            </div>
+            <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+        </header>
+
+        <!-- Rejilla de Información Real -->
+        <div class="grid-info">
+            {% for proyecto in proyectos %}
+            <div class="card">
+                <h3>{{ proyecto.nombre }}</h3>
+                <div class="value" style="font-size: 1.1rem; margin:  10px 0;">
+                    {{ proyecto.descripcion }}
+                </div>
+                <div class="detail"> {{ proyecto.ubicacion }}</div>
+                <div class="detail" style="color: #ff6600; font-weight: bold;">
+                    Estado: {{ proyecto.get_estado_display }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="card">
+                <h3>Sin proyectos</h3>
+                <div class="detail">No hay actividades registradas en la base de datos.</div>
+            </div>
+        {% endfor %}
+
+        </div>
+
+        <!-- Acciones Rápidas -->
+         <div class="class-actions"> <h3 class="titulo-formulario">Gestión de Proyectos</h3>
+    
+    <form action="{% url 'crear_proyecto' %}" method="POST" class="form-inline">
+        {% csrf_token %}
+        <div class="inputs_contenedor">
+            {{ form.nombre }}
+            {{ form.descripcion }}
+        </div>
+        <button type="submit" class="btn-action btn-primary">Crear Proyecto</button>
+    </form>
+    
+    <a href="#" class="btn-action btn-secondary">Generar Reporte PDF</a>
+
+    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+    <div class="proyectos-listado">
+        {% for proyecto in proyectos %}
+        <div class="proyecto-card-mini"> <div class="info">
+                <h4>{{ proyecto.nombre }}</h4>
+            </div>
+            
+            <div class="acciones-proyecto">
+                <a href="{% url 'editar_proyecto' proyecto.pk %}" class="btn-editar">Editar</a>
+                <form action="{% url 'inhabilitar_proyecto' proyecto.pk %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-cancelar" onclick="return confirm('Inhabilitar proyecto?')">Cancelar</button>
+                </form>
+                <a href="{% url 'proyectos_inhabilitados' %}" class="ver-cancelados">Ver Proyectos Inhabilitados</a>
+            </div>
+        </div>
+        {% empty %}
+            <p>No hay proyectos registrados aún.</p>
+        {% endfor %}
+    </div>
+
+</div> 
+</body>
+</html>
