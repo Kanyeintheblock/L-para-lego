@@ -122,6 +122,7 @@ def asignar_tarea(request, proyecto_id):
             tarea = from_t.save(commit=False)
             tarea.proyecto = proyecto
             tarea.created_by = request.user
+            tarea.column ='POR_HACER'
             tarea.save()
             return redirect('home')
     else:
