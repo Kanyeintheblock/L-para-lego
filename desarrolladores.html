@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas de Desarrolladores - Movilnet</title>
+    <style>
+        :root {
+            --movilnet-orange: #ff6600;
+            --bg-body: #f1f5f9;
+            --text-main: #1e293b;
+            --sidebar-width: 260px;
+        }
+
+        body { 
+            display: flex; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width); background: white; height: 100vh;
+            position: fixed; border-right: 1px solid #e2e8f0; padding: 25px;
+            display: flex; flex-direction: column; box-sizing: border-box;
+        }
+
+        .logo { color: var(--movilnet-orange); font-weight: bold; font-size: 1.2rem; margin-bottom: 40px; }
+
+        .nav-group { margin-bottom: 30px; }
+        .nav-label { font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 15px; display: block; }
+        
+        .nav-link {
+            display: flex; align-items: center; padding: 12px 15px;
+            border-radius: 10px; text-decoration: none; color: var(--text-main);
+            font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: #fff7ed; color: var(--movilnet-orange); font-weight: 600;
+        }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px; }
+        
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+
+        .card {
+            background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; padding: 12px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; text-transform: uppercase; }
+        td { text-align: left; padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+
+        .dev-info { display: flex; align-items: center; gap: 12px; }
+        .dev-avatar { 
+            width: 35px; height: 35px; background: #e2e8f0; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-weight: bold; color: #475569;
+        }
+
+        .stat-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;
+        }
+        .stat-total { background: #f1f5f9; color: #475569; }
+        .stat-pending { background: #fef2f2; color: #dc2626; }
+        .stat-process { background: #fffbeb; color: #d97706; }
+        .stat-review { background: #eff6ff; color: #2563eb; }
+        .stat-finished { background: #f0fdf4; color: #16a34a; }
+
+        .btn-back {
+            display: inline-block; padding: 10px 20px; background: white; color: var(--text-main);
+            text-decoration: none; border-radius: 8px; border: 1px solid #d1d5db; font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: #f8fafc; border-color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">MOVILNET GESTIÓN</div>
+        
+        <nav class="nav-group">
+            <span class="nav-label">PROYECTOS</span>
+            <a href="{% url 'home' %}" class="nav-link">📂 Ver Proyectos Activos</a>
+            <a href="{% url 'revision_tareas' %}" class="nav-link" style="margin-top: 10px;">✅ Aprobar Tareas</a>
+        </nav>
+
+        <nav class="nav-group">
+            <span class="nav-label">EQUIPOS</span>
+            <a href="{% url 'lista_desarrolladores' %}" class="nav-link active">👥 Desarrolladores</a>
+        </nav>
+
+        <div style="margin-top: auto;">
+            <a href="{% url 'logout' %}" class="nav-link" style="color: #ef4444;">🚪 Cerrar Sesión</a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="header-flex">
+            <div>
+                <h1>👥 Estadísticas de Desarrolladores</h1>
+                <p style="color: #64748b; margin: 0;">Resumen de actividad por cada miembro del equipo.</p>
+            </div>
+            <a href="{% url 'home' %}" class="btn-back">← Volver al Dashboard</a>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Desarrollador</th>
+                        <th>Total Tareas</th>
+                        <th>Pendientes</th>
+                        <th>En Proceso</th>
+                        <th>En Revisión</th>
+                        <th>Finalizadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>
+                            <div class="dev-info">
+                                <div class="dev-avatar">{{ usuario.username|slice:":1"|upper }}</div>
+                                <div>
+                                    <div style="font-weight: 600;">{{ usuario.first_name }} {{ usuario.last_name }}</div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">@{{ usuario.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="stat-badge stat-total">{{ usuario.total_tareas }}</span></td>
+                        <td><span class="stat-badge stat-pending">{{ usuario.tareas_pendientes }}</span></td>
+                        <td><span class="stat-badge stat-process">{{ usuario.tareas_en_proceso }}</span></td>
+                        <td><span class="stat-badge stat-review">{{ usuario.tareas_en_revision }}</span></td>
+                        <td><span class="stat-badge stat-finished">{{ usuario.tareas_finalizadas }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
+                            No hay desarrolladores registrados en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+</html>

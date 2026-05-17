@@ -1,0 +1,421 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Actividades - {{ proyecto.nombre }} - Movilnet</title>
+    <link rel="shortcut icon" href="{% static 'ventas/movilnet.icon.jpg' %}">
+    <link rel="stylesheet" href="{% static 'ventas/css/desarrollador.css' %}">
+    <style>
+        /* --- Estilos adicionales para el formulario y mejoras --- */
+        .encabezado-seccion {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .encabezado-seccion h2 {
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.92);
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card small {
+            color: #64748b;
+            font-size: 0.75rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-card strong {
+            color: #1e293b;
+            font-size: 1.3rem;
+        }
+
+        /* Badge de estado */
+        .badge-estado {
+            padding: 4px 14px;
+            border-radius: 15px;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-estado.por_hacer {
+            background: #ef4444;
+        }
+
+        .badge-estado.en_proceso {
+            background: #f59e0b;
+        }
+
+        .badge-estado.en_revision {
+            background: #3b82f6;
+        }
+
+        .badge-estado.listo {
+            background: #22c55e;
+        }
+
+        /* Sección del formulario */
+        .form-nueva-tarea {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-nueva-tarea h3 {
+            margin: 0 0 15px 0;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 9px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            background: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ff6600;
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn-agregar-tarea {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            box-shadow: 0 3px 10px rgba(255, 102, 0, 0.3);
+        }
+
+        .btn-agregar-tarea:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
+        }
+
+        .btn-volver {
+            display: inline-block;
+            padding: 8px 18px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.3s;
+        }
+
+        .btn-volver:hover {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Mensajes */
+        .mensaje-exito {
+            background: #dcfce7; color: #166534; padding: 12px 18px; border-radius: 8px;
+            margin-bottom: 15px; font-weight: 600; border-left: 4px solid #22c55e;
+        }
+        .mensaje-error {
+            background: #fef2f2; color: #dc2626; padding: 12px 18px; border-radius: 8px;
+            margin-bottom: 15px; font-weight: 600; border-left: 4px solid #ef4444;
+        }
+
+
+
+        /* Modal estilos */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .btn-cerrar-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .btn-abrir-modal {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Tabla vacía */
+        .empty-table {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .empty-table p {
+            margin: 5px 0;
+        }
+
+        /* Nombre proyecto */
+        .proyecto-nombre {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 4px;
+            font-weight: normal;
+        }
+
+        .btn-accion {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-finalizar-tarea {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .btn-finalizar-tarea:hover {
+            background-color: #16a34a;
+        }
+
+        .btn-eliminar-tarea {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-eliminar-tarea:hover {
+            background-color: #dc2626;
+        }
+
+        .acciones-container {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+
+<body style="background-color: #f1f5f9; margin: 0; font-family: 'Inter', sans-serif;">
+
+    <header class="navbar">
+        <div class="usuario-info">
+            <span>👤 Agente: {{ user.first_name|default:user.username }}</span>
+        </div>
+        <a href="{% url 'home' %}" class="btn-volver">← Volver a Proyectos</a>
+    </header>
+
+    <main class="dashboard">
+        <div class="encabezado-seccion">
+            <div>
+                <h2>📋 Panel de Actividades</h2>
+                <p class="proyecto-nombre">Proyecto: <strong>{{ proyecto.nombre }}</strong></p>
+            </div>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <small>Total Tareas</small>
+                    <strong>{{ tareas.count }}</strong>
+                </div>
+                <div class="stat-card">
+                    <small>Pendientes</small>
+                    <strong>{{ tareas_pendientes|default:"0" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensajes del sistema -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="{% if 'error' in message.tags %}mensaje-error{% else %}mensaje-exito{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Botón para abrir modal -->
+        <button class="btn-abrir-modal" onclick="document.getElementById('modalTarea').classList.add('active')">
+            ➕ Añadir Tarea
+        </button>
+
+        <!-- Modal Formulario para agregar nueva tarea -->
+        <div class="modal-overlay" id="modalTarea">
+            <div class="modal-content">
+                <button class="btn-cerrar-modal" onclick="document.getElementById('modalTarea').classList.remove('active')">✖</button>
+                <h3 style="margin: 0 0 15px 0; color: #1e293b;">➕ Agregar Nueva Tarea</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <div class="form-group">
+                            <label for="id_title">Título</label>
+                            {{ form_tarea.title }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_description">Descripción</label>
+                            {{ form_tarea.description }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_assigned_to">Asignar a</label>
+                            {{ form_tarea.assigned_to }}
+                        </div>
+                        <div class="form-group">
+                            <label for="id_column">Estado</label>
+                            {{ form_tarea.column }}
+                        </div>
+                        <div class="form-group" style="align-items: flex-end; margin-top: 10px;">
+                            <button type="submit" class="btn-agregar-tarea">Guardar Tarea</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de tareas del proyecto -->
+        <div class="tabla-vidrio">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Asignado a</th>
+                        <th>Creado por</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tarea in tareas %}
+                    <tr>
+                        <td><strong>{{ tarea.title }}</strong></td>
+                        <td>{{ tarea.description|truncatechars:80 }}</td>
+                        <td>
+                            <span class="badge-estado {{ tarea.column|lower }}">
+                                {{ tarea.get_column_display }}
+                            </span>
+                        </td>
+                        <td>{{ tarea.assigned_to.first_name|default:tarea.assigned_to.username }}</td>
+                        <td>{{ tarea.created_by.first_name|default:tarea.created_by.username }}</td>
+                        <td>
+                            <div class="acciones-container">
+                                {% if tarea.column != 'EN_REVISION' and tarea.column != 'LISTO' %}
+                                <form action="{% url 'finalizar_tarea' tarea.pk %}" method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-accion btn-finalizar-tarea">Finalizar</button>
+                                </form>
+                                {% endif %}
+                                {% if user.is_staff or tarea.created_by == request.user and not tarea.created_by.is_staff %}
+                                <form action="{% url 'eliminar_tarea' tarea.pk %}" method="POST" onsubmit="return confirm('¿Eliminar esta tarea?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-accion btn-eliminar-tarea">Eliminar</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-table">
+                            <p>📭 No hay tareas asignadas a este proyecto aún.</p>
+                            <p>¡Usa el formulario de arriba para crear la primera!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+
+</html>

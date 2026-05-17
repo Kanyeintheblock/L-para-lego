@@ -1,0 +1,406 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Asignaciones - {{ proyecto.nombre }}</title>
+    <style>
+        :root {
+            --orange: #ff6600;
+            --orange-light: #fff7ed;
+            --bg: #f1f5f9;
+            --text: #1e293b;
+            --sidebar-w: 260px;
+            --green: #22c55e;
+            --amber: #f59e0b;
+            --red: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            display: flex;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ========= SIDEBAR ========= */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            border-right: 1px solid #e2e8f0;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+        .logo { color: var(--orange); font-weight: bold; font-size: 1.2rem; margin-bottom: 40px; }
+        .nav-group { margin-bottom: 30px; }
+        .nav-label { font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 15px; display: block; }
+        .nav-link {
+            display: flex; align-items: center; padding: 10px 15px; border-radius: 10px;
+            text-decoration: none; color: var(--text); font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px;
+        }
+        .nav-link:hover, .nav-link.active { background: var(--orange-light); color: var(--orange); font-weight: 600; }
+
+        /* ========= MAIN ========= */
+        .main { margin-left: var(--sidebar-w); flex: 1; padding: 40px; max-width: 1100px; }
+
+        /* Header */
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { font-size: 1.6rem; margin-bottom: 6px; }
+        .breadcrumb { color: #64748b; font-size: 0.88rem; }
+        .breadcrumb a { color: var(--orange); text-decoration: none; }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap;
+        }
+        .stat-card {
+            background: white; border-radius: 12px; padding: 16px 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07); flex: 1; min-width: 140px;
+            border-left: 4px solid var(--orange);
+        }
+        .stat-card .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--text); }
+        .stat-card .stat-label { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+        .stat-card.green { border-color: var(--green); }
+        .stat-card.green .stat-num { color: #15803d; }
+        .stat-card.amber { border-color: var(--amber); }
+        .stat-card.amber .stat-num { color: #b45309; }
+
+        /* Mensajes */
+        .msg { padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; font-weight: 600; font-size: 0.9rem; }
+        .msg-success { background: #dcfce7; color: #166534; border-left: 4px solid var(--green); }
+        .msg-error   { background: #fef2f2; color: #dc2626; border-left: 4px solid var(--red); }
+
+        /* ========= PANEL ASIGNAR TODOS ========= */
+        .bulk-panel {
+            background: white; border-radius: 14px; padding: 22px 26px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 28px;
+            border: 2px dashed #cbd5e1; transition: border-color 0.3s;
+        }
+        .bulk-panel:hover { border-color: var(--orange); }
+        .bulk-panel h3 { font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .bulk-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .bulk-row select {
+            flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid #d1d5db;
+            border-radius: 10px; font-size: 0.92rem; font-family: inherit; background: white;
+        }
+        .bulk-row select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,102,0,0.12); }
+        .btn-bulk {
+            background: linear-gradient(135deg, var(--orange), #ff8533); color: white;
+            border: none; padding: 10px 22px; border-radius: 10px; font-weight: bold;
+            cursor: pointer; font-size: 0.92rem; transition: 0.3s; white-space: nowrap;
+        }
+        .btn-bulk:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255,102,0,0.3); }
+
+        /* ========= TABLA DE TAREAS ========= */
+        .section-title {
+            font-size: 1rem; font-weight: 700; color: var(--text);
+            margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+        }
+
+        .tasks-table-wrap {
+            background: white; border-radius: 14px; overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 28px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #f8fafc; }
+        th {
+            padding: 13px 16px; text-align: left; font-size: 0.78rem;
+            font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fafafa; }
+        td { padding: 14px 16px; font-size: 0.88rem; vertical-align: middle; }
+
+        /* Badge estado asignación */
+        .badge-asignado {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+            border-radius: 20px; white-space: nowrap;
+        }
+        .badge-asignado.ok  { background: #dcfce7; color: #15803d; }
+        .badge-asignado.pen { background: #fef3c7; color: #b45309; }
+
+        /* Selector inline */
+        .dev-select {
+            padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.85rem; font-family: inherit; background: white; min-width: 170px;
+        }
+        .dev-select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,102,0,0.1); }
+
+        .btn-assign-one {
+            background: #f0fdf4; color: #15803d; border: 1px solid #86efac;
+            padding: 7px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: 0.2s; white-space: nowrap;
+        }
+        .btn-assign-one:hover { background: var(--green); color: white; border-color: var(--green); }
+
+        /* Dev avatar chip */
+        .dev-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #eff6ff; color: #1d4ed8; padding: 5px 11px;
+            border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+        }
+        .dev-chip .avatar {
+            width: 22px; height: 22px; border-radius: 50%; background: #bfdbfe;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 800; color: #1d4ed8;
+        }
+
+        /* Task number badge */
+        .task-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 24px; height: 24px; border-radius: 6px; background: #f1f5f9;
+            font-size: 0.75rem; font-weight: 700; color: #64748b;
+        }
+
+        /* ========= PANEL NUEVA TAREA (solo Personalizado) ========= */
+        .nueva-tarea-panel {
+            background: white; border-radius: 14px; padding: 24px 28px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-top: 4px solid #7c3aed;
+        }
+        .nueva-tarea-panel h3 { font-size: 1rem; margin-bottom: 18px; color: #4c1d95; }
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .field-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px; }
+        .field-group input,
+        .field-group textarea,
+        .field-group select {
+            width: 100%; padding: 10px 13px; border: 1px solid #d1d5db; border-radius: 9px;
+            font-size: 0.9rem; font-family: inherit; background: white;
+        }
+        .field-group input:focus,
+        .field-group textarea:focus,
+        .field-group select:focus {
+            outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+        }
+        .field-group textarea { resize: vertical; min-height: 70px; }
+        .field-full { grid-column: 1 / -1; }
+        .btn-nueva {
+            background: linear-gradient(135deg, #7c3aed, #9333ea); color: white;
+            border: none; padding: 11px 24px; border-radius: 10px; font-weight: bold;
+            cursor: pointer; font-size: 0.92rem; transition: 0.3s;
+        }
+        .btn-nueva:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(124,58,237,0.3); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .field-grid { grid-template-columns: 1fr; }
+            .bulk-row { flex-direction: column; }
+            .bulk-row select { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+        <div class="logo">MOVILNET GESTION</div>
+        <nav class="nav-group">
+            <span class="nav-label">PROYECTOS</span>
+            <a href="{% url 'home' %}" class="nav-link active">&#128194; Ver Proyectos Activos</a>
+            <a href="{% url 'proyectos_inhabilitados' %}" class="nav-link">&#128683; Proyectos Inhabilitados</a>
+            <a href="{% url 'revision_tareas' %}" class="nav-link" style="margin-top:10px;">&#9989; Aprobar Tareas</a>
+        </nav>
+        <nav class="nav-group">
+            <span class="nav-label">EQUIPOS</span>
+            <a href="{% url 'lista_desarrolladores' %}" class="nav-link">&#128101; Desarrolladores</a>
+        </nav>
+        <div style="margin-top: auto;">
+            <a href="{% url 'logout' %}" class="nav-link" style="color:#ef4444;">&#128682; Cerrar Sesion</a>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN ===== -->
+    <main class="main">
+
+        <!-- Breadcrumb -->
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="{% url 'home' %}">Proyectos</a> &rsaquo;
+                <a href="{% url 'panel_desarrollador' proyecto.id %}">{{ proyecto.nombre }}</a> &rsaquo;
+                Gestionar Asignaciones
+            </div>
+            <h1>&#128203; Gestionar Asignaciones &mdash; {{ proyecto.nombre }}</h1>
+        </div>
+
+        <!-- Mensajes -->
+        {% if messages %}
+            {% for message in messages %}
+            <div class="msg {% if 'success' in message.tags %}msg-success{% else %}msg-error{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-num">{{ total }}</div>
+                <div class="stat-label">Tareas totales</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-num">{{ total|add:"-"|add:sin_asignar }}</div>
+                <div class="stat-label">Asignadas</div>
+            </div>
+            <div class="stat-card amber">
+                <div class="stat-num">{{ sin_asignar }}</div>
+                <div class="stat-label">Sin asignar</div>
+            </div>
+            <div class="stat-card" style="border-color:#7c3aed;">
+                <div class="stat-num" style="color:#7c3aed;">{{ proyecto.get_tipo_display }}</div>
+                <div class="stat-label">Tipo de proyecto</div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL: ASIGNAR TODOS ===== -->
+        {% if sin_asignar > 0 %}
+        <div class="bulk-panel">
+            <h3>&#9889; Asignacion rapida &mdash; todas las tareas pendientes</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="asignar_todos">
+                <div class="bulk-row">
+                    <select name="dev_id_todos" required>
+                        <option value="" disabled selected>Selecciona un desarrollador...</option>
+                        {% for dev in desarrolladores %}
+                            <option value="{{ dev.id }}">
+                                {% if dev.first_name %}{{ dev.first_name }} {{ dev.last_name }}{% else %}{{ dev.username }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn-bulk">
+                        &#9889; Asignar {{ sin_asignar }} tarea{{ sin_asignar|pluralize }} pendiente{{ sin_asignar|pluralize }}
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- ===== TABLA DE TAREAS ===== -->
+        <div class="section-title">&#128203; Tareas del Proyecto</div>
+        <div class="tasks-table-wrap">
+            {% if tareas_info %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Tarea</th>
+                        <th>Estado</th>
+                        <th>Desarrollador Asignado</th>
+                        <th>Reasignar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in tareas_info %}
+                    <tr>
+                        <td><span class="task-num">{{ forloop.counter }}</span></td>
+                        <td>
+                            <strong style="display:block; margin-bottom:3px;">{{ item.tarea.title }}</strong>
+                            <span style="color:#64748b; font-size:0.8rem;">{{ item.tarea.description|truncatechars:80 }}</span>
+                        </td>
+                        <td>
+                            {% if item.sin_asignar %}
+                                <span class="badge-asignado pen">&#9202; Pendiente</span>
+                            {% else %}
+                                <span class="badge-asignado ok">&#10003; Asignada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.sin_asignar %}
+                                <span style="color:#94a3b8; font-size:0.82rem;">Sin asignar</span>
+                            {% else %}
+                                <span class="dev-chip">
+                                    <span class="avatar">
+                                        {% if item.tarea.assigned_to.first_name %}
+                                            {{ item.tarea.assigned_to.first_name.0 }}{{ item.tarea.assigned_to.last_name.0 }}
+                                        {% else %}
+                                            {{ item.tarea.assigned_to.username.0|upper }}
+                                        {% endif %}
+                                    </span>
+                                    {% if item.tarea.assigned_to.first_name %}
+                                        {{ item.tarea.assigned_to.first_name }} {{ item.tarea.assigned_to.last_name }}
+                                    {% else %}
+                                        {{ item.tarea.assigned_to.username }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" style="display:flex; gap:8px; align-items:center;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="individual">
+                                <input type="hidden" name="tarea_id" value="{{ item.tarea.id }}">
+                                <select name="dev_id" class="dev-select" required>
+                                    <option value="" disabled {% if item.sin_asignar %}selected{% endif %}>Elegir...</option>
+                                    {% for dev in desarrolladores %}
+                                        <option value="{{ dev.id }}"
+                                            {% if not item.sin_asignar and item.tarea.assigned_to_id == dev.id %}selected{% endif %}>
+                                            {% if dev.first_name %}{{ dev.first_name }} {{ dev.last_name }}{% else %}{{ dev.username }}{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn-assign-one">&#10003; Asignar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 40px; text-align:center; color:#64748b;">
+                <div style="font-size:2.5rem; margin-bottom:12px;">&#128203;</div>
+                <p>Este proyecto no tiene tareas todavia.</p>
+                {% if proyecto.tipo == 'PERSONALIZADO' %}
+                <p style="margin-top:8px; font-size:0.85rem;">Usa el formulario de abajo para crear la primera tarea.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ===== PANEL: NUEVA TAREA (solo Proyecto Personalizado) ===== -->
+        {% if proyecto.tipo == 'PERSONALIZADO' %}
+        <div class="nueva-tarea-panel">
+            <h3>&#43; Crear Nueva Tarea Personalizada</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="nueva_tarea">
+                <div class="field-grid">
+                    <div class="field-group field-full">
+                        <label for="titulo_nueva">Titulo de la Tarea *</label>
+                        <input type="text" name="titulo" id="titulo_nueva" placeholder="Ej: Implementar modulo de pagos" required>
+                    </div>
+                    <div class="field-group field-full">
+                        <label for="desc_nueva">Descripcion</label>
+                        <textarea name="descripcion" id="desc_nueva" placeholder="Describe en que consiste esta tarea..."></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label for="dev_nueva">Asignar a Desarrollador</label>
+                        <select name="dev_id_nueva" id="dev_nueva" required>
+                            <option value="" disabled selected>Selecciona un desarrollador...</option>
+                            {% for dev in desarrolladores %}
+                                <option value="{{ dev.id }}">
+                                    {% if dev.first_name %}{{ dev.first_name }} {{ dev.last_name }}{% else %}{{ dev.username }}{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="field-group" style="display:flex; align-items:flex-end;">
+                        <button type="submit" class="btn-nueva" style="width:100%;">
+                            &#43; Crear y Asignar Tarea
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+    </main>
+</body>
+</html>

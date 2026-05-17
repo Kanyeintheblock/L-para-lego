@@ -1,0 +1,381 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyectos Inhabilitados - Movilnet</title>
+    <style>
+        :root {
+            --movilnet-orange: #ff6600;
+            --bg-body: #f1f5f9;
+            --text-main: #1e293b;
+            --sidebar-width: 260px;
+            --amber: #f59e0b;
+            --amber-light: #fef3c7;
+        }
+
+        body {
+            display: flex;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background: var(--bg-body);
+            color: var(--text-main);
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            border-right: 1px solid #e2e8f0;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            color: var(--movilnet-orange);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        .nav-group {
+            margin-bottom: 30px;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            transition: 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: #fff7ed;
+            color: var(--movilnet-orange);
+            font-weight: 600;
+        }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 40px;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .header-flex h1 {
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        /* Badge contador */
+        .badge {
+            background: var(--amber);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        /* Grid de proyectos */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        /* Tarjeta inhabilitada */
+        .project-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: 0.3s;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid var(--amber);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card::before {
+            content: 'INHABILITADO';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--amber-light);
+            color: var(--amber);
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .project-card h4 {
+            margin: 0 0 8px 0;
+            color: var(--text-main);
+            font-size: 1rem;
+            padding-right: 100px;
+        }
+
+        .project-card p {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin: 0 0 15px 0;
+            font-style: italic;
+        }
+
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 18px;
+        }
+
+        /* Botón restaurar */
+        .btn-restaurar {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.3s;
+            width: 100%;
+        }
+
+        .btn-restaurar:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .btn-orange {
+            background: var(--movilnet-orange);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+        }
+
+        .btn-orange:hover {
+            background: #e55a00;
+        }
+
+        /* Mensajes del sistema */
+        .msg {
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .msg-success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #22c55e;
+        }
+
+        .msg-error {
+            background: #fef2f2;
+            color: #dc2626;
+            border-left: 4px solid #ef4444;
+        }
+
+        /* Info banner */
+        .info-banner {
+            background: var(--amber-light);
+            border: 1px solid #fcd34d;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 25px;
+            font-size: 0.88rem;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Badges de tipo de proyecto */
+        .badge-tipo {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+        .badge-FRONTEND      { background: #dbeafe; color: #1d4ed8; }
+        .badge-BACKEND       { background: #dcfce7; color: #15803d; }
+        .badge-BASE_DE_DATOS { background: #f3e8ff; color: #7e22ce; }
+        .badge-PERSONALIZADO { background: #f1f5f9; color: #475569; }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">MOVILNET GESTIÓN</div>
+
+        <nav class="nav-group">
+            <span class="nav-label">PROYECTOS</span>
+            <a href="{% url 'home' %}" class="nav-link">📂 Ver Proyectos Activos</a>
+            <a href="{% url 'proyectos_inhabilitados' %}" class="nav-link active">🚫 Proyectos Inhabilitados</a>
+            <a href="{% url 'revision_tareas' %}" class="nav-link" style="margin-top: 10px;">✅ Aprobar Tareas</a>
+        </nav>
+
+        <nav class="nav-group">
+            <span class="nav-label">EQUIPOS</span>
+            <a href="{% url 'lista_desarrolladores' %}" class="nav-link">👥 Desarrolladores</a>
+        </nav>
+
+        <div style="margin-top: auto;">
+            <a href="{% url 'logout' %}" class="nav-link" style="color: #ef4444;">🚪 Cerrar Sesión</a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="header-flex">
+            <h1>🚫 Proyectos Inhabilitados
+                {% if proyectos %}
+                <span class="badge">{{ proyectos|length }}</span>
+                {% endif %}
+            </h1>
+        </div>
+        <p class="page-subtitle">Proyectos archivados que pueden ser restaurados en cualquier momento.</p>
+
+        <!-- Mensajes del sistema -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="msg {% if 'success' in message.tags %}msg-success{% else %}msg-error{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Banner informativo -->
+        <div class="info-banner">
+            💡 <span>Los proyectos inhabilitados <strong>no aparecen en el panel principal</strong>. Puedes restaurarlos
+                cuando lo necesites.</span>
+        </div>
+
+        {% if proyectos %}
+        <div class="projects-grid">
+            {% for proyecto in proyectos %}
+            <div class="project-card">
+                <h4>{{ proyecto.nombre }}</h4>
+                <span class="badge-tipo badge-{{ proyecto.tipo }}">
+                    {{ proyecto.get_tipo_display_icon }} {{ proyecto.get_tipo_display }}
+                </span>
+                <p>{{ proyecto.descripcion|truncatechars:100|default:"Sin descripci&oacute;n." }}</p>
+
+                <div class="project-meta">
+                    <span>Creado: {{ proyecto.fecha_creacion|date:"d/m/Y" }}</span>
+                    {% if proyecto.fecha_deadline %}
+                        <span>&#9201;&#65039; Deadline: {{ proyecto.fecha_deadline|date:"d/m/Y" }}</span>
+                    {% else %}
+                        <span style="color:#94a3b8;">Sin deadline</span>
+                    {% endif %}
+                </div>
+                <div class="project-meta" style="margin-top:4px;">
+                    <span>Tareas: {{ proyecto.tasks.count }}</span>
+                </div>
+
+                <form action="{% url 'restaurar_proyecto' proyecto.pk %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-restaurar"
+                        onclick="return confirm('¿Restaurar el proyecto &quot;{{ proyecto.nombre }}&quot;? Volverá a aparecer en el panel principal.');">
+                        ♻️ Restaurar Proyecto
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <h3>No hay proyectos inhabilitados</h3>
+            <p>Todos los proyectos están activos. Si inhabilitas alguno desde el panel principal, aparecerá aquí.</p>
+            <a href="{% url 'home' %}" class="btn-orange">← Volver al Panel Principal</a>
+        </div>
+        {% endif %}
+    </main>
+
+</body>
+
+</html>
